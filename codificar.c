@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 
 int main(){
@@ -35,7 +36,7 @@ int main(){
             //Caso caracter for igual ao da tabela...
             if(txtNoCript[tam_txt] == characters[k]){
                 //Por que +10? Meus caracteres preCodificados vão de 32 - 126
-                preCodificados[tam_txt] = k + 32;
+                preCodificados[tam_txt] = k+32;
             }
         }
     
@@ -46,7 +47,25 @@ int main(){
     {
         printf("%d ", preCodificados[i]);
     }
+
+    //Valores de P, Q e E | PARA TESTE APENAS 
+    int p = 5, q = 7, e = 7;
+    int n = p*q; 
     
+    //Declaro o array que quarda os valores codificados 
+    unsigned long long codificado[255];
+    
+    printf("\n\n ##Codificado\n");
+    for (int k = 0; k < tam_txt - 1; k++)
+    {   
+        //naoCodificado ^ e = a mod (n)
+        unsigned long long aElevE = pow(preCodificados[k], e);
+        
+        codificado[k] =  aElevE % n;
+        printf("%lld ", codificado[k]);
+    }
+    
+
     
 
     return 0;
