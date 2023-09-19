@@ -34,7 +34,7 @@ void chavePublica(){
     //Calcula a Chave Publica 
     mpz_mul(n, p, q);
 
-    gmp_printf("p: %Zd | q: %Zd | e: %Zd | n: %Zd", p, q, e, n);
+    gmp_printf("p: %Zd | q: %Zd | e: %Zd | n: %Zd\n", p, q, e, n);
 
     //Converte os dados em String
     char *str_q, *str_p, *str_n, *str_e;
@@ -46,7 +46,7 @@ void chavePublica(){
     //Cria um txt com os dados 
     FILE *file;
     file = fopen("chave-publica.txt", "w");
-    fprintf(file, "p: %s\nq: %s\nn: %s\ne: %s",str_p,str_q, str_n, str_e);
+    fprintf(file, "p: %s\nq: %s\nn: %s\ne: %s\n",str_p,str_q, str_n, str_e);
     fclose(file);
     
     //Limpa memória alocada
@@ -56,19 +56,34 @@ void chavePublica(){
     return;
 }
 
+void encripitar(){
+    
+
+    return;
+}
 int main(){
+    int voltar;
+    do{
+    system("clear");
     int escolha = initialChoose();
     
     switch(escolha) {
     case 1:
         chavePublica();
+        printf("Voltar a tela inicial? [1,0] \n");
+        scanf("%d", &voltar);
         break;
     case 2:
-        //encripitar();
+        encripitar();
         break;
     case 3:
         //desencriptar();
         break;
     }
+
+    } while (voltar);
+    
+    
+    
     return 0;
 }
