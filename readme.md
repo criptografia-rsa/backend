@@ -28,7 +28,7 @@
     sudo apt-get update
     sudo apt-get install libgmp-dev
 
-<strong>Fedora/strong> 
+<strong>Fedora</strong> 
 
     sudo dnf install gmp-devel
 
