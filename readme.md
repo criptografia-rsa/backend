@@ -18,15 +18,40 @@
 
 
 <h3>Biblioteca GMP</h3>
-<p>*Essa biblioteca tem como objetivo permitir a operação de números arbitrariamente grandes </p>  
+*Essa biblioteca tem como objetivo permitir a operação de números arbitrariamente grandes 
 
-<h5>Instalando a Biblioteca GMP</h5>
+<h4>Instalando a Biblioteca GMP </h4>
 
-<p>
+
 <strong>Ubuntu/Debian</strong> 
-sudo apt-get update
-sudo apt-get install libgmp-dev
-</p>
+
+    sudo apt-get update
+    sudo apt-get install libgmp-dev
+
+<strong>Fedora/strong> 
+
+    sudo dnf install gmp-devel
+
+<strong>Arch Linux</strong> 
+
+    sudo pacman -S gmp
+
+<strong>macOS - Usando Homebrew</strong> 
+
+    macOS (Usando Homebrew)
+
+<strong>Qualquer Sistema</strong> 
+
+    curl -O https://gmplib.org/download/gmp/gmp-x.y.z.tar.xz
+
+    tar -xvf gmp-x.y.z.tar.xz
+
+    cd gmp-x.y.z
+
+    ./configure
+    make
+    sudo make install
+
 
 
 <h3>Teste | Valores de Entrada</h3>
