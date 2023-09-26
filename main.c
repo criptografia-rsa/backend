@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <gmp.h>
 #include <stdlib.h>
+#include <gmp.h>
+#include <string.h>
 
 int escolhaInicial(){
     
@@ -36,7 +37,7 @@ void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
 
     //gmp_printf("p: %Zd | q: %Zd | e: %Zd | n: %Zd\n", p, q, e, n);
     printf("TXT ALTERADO!\n");
-    //Converte os dados em String//EXCLUIR DPS DESNECESSÁRIO
+    //Converte os dados em String//EXCLUIR DPS , DESNECESSÁRIO!!!
     char *str_q, *str_p, *str_n, *str_e;
     str_p =  mpz_get_str(NULL, 10, p);
     str_q =  mpz_get_str(NULL, 10, q);
@@ -56,9 +57,83 @@ void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
     return;
 }
 
-void encriptar(){
-        printf("Entrou no  encriptar()\n");
 
+int preCodificar(char letra){
+    //Declarando nossa referência da ACSII | Intervalo : 32-126
+    char caracteres[95] = {
+        ' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
+        '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+        'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_',
+        '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+        'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~'
+    };
+
+    for (int i = 0; i < 95; i++)
+    {
+        if(letra == caracteres[i]){
+            return i + 32;
+        } 
+    }
+    //RESOLVER PROBLEMA PQ TA PASSANDO O FOR NO ULTIMO CARACTER QUE NAO DEVERIA EXISTIR
+    //printf("Caracter %c é inválido!\n", letra);
+    //return -1;
+}
+
+void encriptar(char mensagem[255], char n_string[255], char  e_string[255]){
+        //Declarando e Inicializando variáveis arbitrariamentre grandes 
+        mpz_t n, e, base;
+        mpz_inits(n, e, base, NULL);
+
+        //Convertendo a string lida para inteiro gmp
+        mpz_init_set_str(n, n_string, 10);
+        mpz_init_set_str(e, e_string, 10);
+        
+        //Pré-Codificar
+        int i = 0, array_pre_codificado[255];
+        while (mensagem[i] != '\0')
+        {   
+            array_pre_codificado[i] = preCodificar(mensagem[i]);
+            i++;
+        }
+        
+        //Codificar 
+        mpz_t array_codificado[i];
+
+
+        for (int k = 0; k < i - 1; k++)
+        {   mpz_init(array_codificado[k]);
+            mpz_set_ui(base, array_pre_codificado[k]);
+
+            // Calcula (base^exponent) % modulus
+            mpz_powm(array_codificado[k], base, e, n);
+        }
+        
+
+        
+        
+        //Cria um txt com os dados 
+        FILE *file;
+        file = fopen("mensagem-encriptada.txt", "w");
+
+        for (int k = 0; k < i -1; k++)
+        {   
+            gmp_fprintf(file, "%Zd ",array_codificado[k]);
+        }
+
+        fclose(file);
+       
+
+        
+        
+
+
+       
+        
+
+        
+        
+        
     
     return;
 }
@@ -75,7 +150,7 @@ int main(){
     do{
         system("clear");
         int escolha = escolhaInicial();
-        
+        getchar();
         switch(escolha) {
         case 1:
             //Lendo a entrada como string
@@ -86,7 +161,15 @@ int main(){
             chavePublica(p_string, q_string,e_string);
             break;
         case 2:
-            encriptar();
+            unsigned char mensagem[255];
+            printf("Digite a mensagem a ser encriptada:\n");
+            fgets(mensagem, sizeof(mensagem), stdin);
+
+            unsigned char n_str[255], e_str[255];
+            printf("Digite o valor a chave publica (n,e)\n");
+            scanf(" %s %s", n_str, e_str);
+            
+            encriptar(mensagem, n_str, e_str);
             
 
             break;
