@@ -1,7 +1,11 @@
 <h1>Documentação | Criptografia RSA </h1> 
 
+<h3>Sobre</h3>
+A criptografia RSA visa garantir a confidencialidade e autenticidade de dados por meio de técnicas de criptografia e assinaturas digitais. 
+Ela desempenha um papel central na proteção de informações e na segurança das comunicações online.
 
-<h3>Código Unicode </h3>D
+
+<h3>Código Unicode </h3>
 
 * Unicode e Caracteres que representão da posição 32-126 ASCII (https://www.ime.usp.br/~pf/algoritmos/apend/ascii.html)
 
@@ -15,6 +19,9 @@
             '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
             'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~'
         }
+
+O "valor" de cada caracter será calculado da seguinte forma: posição do array + 32. 
+Exemplo: '!' equivale a  33 = 1 + 32
 
 
 <h3>Biblioteca GMP</h3>
