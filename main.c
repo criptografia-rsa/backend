@@ -36,7 +36,7 @@ void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
     mpz_mul(n, p, q);
 
     //gmp_printf("p: %Zd | q: %Zd | e: %Zd | n: %Zd\n", p, q, e, n);
-    printf("TXT ALTERADO!\n");
+    //printf("TXT ALTERADO!\n");
     //Converte os dados em String//EXCLUIR DPS , DESNECESSÁRIO!!!
     char *str_q, *str_p, *str_n, *str_e;
     str_p =  mpz_get_str(NULL, 10, p);
@@ -72,9 +72,11 @@ int preCodificar(char letra){
     for (int i = 0; i < 95; i++)
     {
         if(letra == caracteres[i]){
+            //printf("Entrou no letra  == caracter[]i\n");
             return i + 32;
         } 
     }
+   
     //RESOLVER PROBLEMA PQ TA PASSANDO O FOR NO ULTIMO CARACTER QUE NAO DEVERIA EXISTIR
     //printf("Caracter %c é inválido!\n", letra);
     //return -1;
@@ -122,24 +124,25 @@ void encriptar(char mensagem[255], char n_string[255], char  e_string[255]){
         }
 
         fclose(file);
-       
 
-        
-        
-
-
-       
-        
-
-        
-        
-        
     
     return;
 }
 
-void  desencriptar(){
-    printf("Entrou no  desencriptar()\n");
+void  desencriptar(char p_string[255],char q_string[255], char e_string[255], char msg_encriptada[255]){
+    printf("%s %s %s\n%s", p_string, q_string,e_string, msg_encriptada );
+
+    //Declarando e inicializando as variáveis arbitrariamente grandes 
+    mpz_t p, q, e, d, k;
+    mpz_inits(p, q, e, d, k, NULL);
+
+    //Convertendo as string para variáveis arbitrariamente grandes 
+    mpz_init_set_str(p, p_string, 10);
+    mpz_init_set_str(q, q_string, 10);      
+    mpz_init_set_str(e, e_string, 10);
+
+    
+
     
     return;
 }
@@ -170,11 +173,21 @@ int main(){
             scanf(" %s %s", n_str, e_str);
             
             encriptar(mensagem, n_str, e_str);
-            
 
             break;
         case 3:
-            desencriptar();
+            //Lendo os valores de p q e 
+            unsigned char p_s[255], q_s[255], e_s[255];
+            printf("Digite o valor de p, q, e :\n");
+            scanf(" %s %s %s", p_s, q_s, e_s);
+            getchar();
+
+            unsigned char msg_encriptada[255];
+            printf("Digite a mensagem encriptada:\n");
+            fgets(msg_encriptada, sizeof(msg_encriptada), stdin);
+
+            desencriptar(p_s, q_s, e_s, msg_encriptada);
+
             break;
         }
 
