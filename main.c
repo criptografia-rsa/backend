@@ -3,6 +3,74 @@
 #include <gmp.h>
 #include <string.h>
 
+
+void inverso_modular(mpz_t d, mpz_t e, mpz_t k){
+    
+    //Declarando os vetores necessários
+    mpz_t resto[1000],  quociente[1000] , m[1000], n[1000], aux, mod_k;
+
+    //Inicialização dos dois primeiros elementos de resto[], m[] e n[]
+    mpz_inits(resto[0], resto[1],  m[0], m[1],   n[0], n[1], aux, mod_k, NULL);
+    mpz_inits(quociente[0], quociente[1], NULL);
+
+    //Atribuindo os valores conhecidos para o funcionamento da solução 
+    mpz_set(resto[0], e); mpz_set(resto[1], k);
+    mpz_set_ui(m[0], 1); mpz_set_ui(m[1], 0);
+    mpz_set_ui(n[0], 0); mpz_set_ui(n[1], 1);
+    mpz_set(mod_k, k);
+
+    //Calcular a mod b
+    mpz_mod(aux, e, k);
+
+    int tam = 0;
+    while (mpz_cmp_ui(aux, 0) != 0)
+    {   
+        //Inicializando os novos elementos
+        mpz_inits(resto[tam + 2], quociente[tam+2], m[tam+2], n[tam+2], NULL);
+
+        //Calcula o novo quociente do array quociente[]
+        mpz_tdiv_q(quociente[tam+2], resto[tam], resto[tam+1]);
+
+        //Calcula o  novo resto do array resto[]
+        mpz_mod(resto[tam + 2], resto[tam], resto[tam+1]);
+
+
+        //Calculando o produto mq e nq
+        mpz_t produto_mq,produto_nq;
+        mpz_inits(produto_mq, produto_nq, NULL);
+
+        mpz_mul(produto_mq, m[tam+1], quociente[tam+2]);
+        mpz_mul(produto_nq, n[tam+1], quociente[tam+2]);
+
+
+        //Calcula o novo m do array m[]
+        mpz_sub(m[tam+2], m[tam], produto_mq );
+        mpz_sub(n[tam+2], n[tam], produto_nq );
+
+        mpz_set(e, k);
+        mpz_set(k, resto[tam+2]);
+    
+
+        //Calcular a mod b
+        mpz_mod(aux, e, k);
+    
+        tam++;
+    }
+
+    // Verificar se m[index+1] é negativo
+    while (mpz_cmp_ui(m[tam + 1], 0) < 0) {
+        // Adicionar mod_k a m[index+1]
+        mpz_add(m[tam + 1], m[tam + 1], mod_k);
+    }
+
+
+
+    mpz_set(d, m[tam+1]);;
+    
+    
+    return;
+}
+
 int escolhaInicial(){
     
     printf("1-Gerar chave pública\n");
@@ -129,18 +197,28 @@ void encriptar(char mensagem[255], char n_string[255], char  e_string[255]){
     return;
 }
 
-void  desencriptar(char p_string[255],char q_string[255], char e_string[255], char msg_encriptada[255]){
+void desencriptar(char p_string[255],char q_string[255], char e_string[255], char msg_encriptada[255]){
     printf("%s %s %s\n%s", p_string, q_string,e_string, msg_encriptada );
 
     //Declarando e inicializando as variáveis arbitrariamente grandes 
-    mpz_t p, q, e, d, k;
-    mpz_inits(p, q, e, d, k, NULL);
+    mpz_t p, q, e, d, k, p_menos_1, q_menos_1;
+    mpz_inits(p, q, e, d, k, p_menos_1, q_menos_1, NULL);
 
     //Convertendo as string para variáveis arbitrariamente grandes 
     mpz_init_set_str(p, p_string, 10);
     mpz_init_set_str(q, q_string, 10);      
     mpz_init_set_str(e, e_string, 10);
 
+    //Definindo (p-1)*(q-1) 
+    mpz_sub_ui(p_menos_1, p, 1);
+    mpz_sub_ui(q_menos_1, p, 1);
+    mpz_mul(k, p_menos_1, q_menos_1);
+
+    //Encontrar o inverso modular entre [e] e [k] onde k = (p-1)*(q-1)
+    inverso_modular(d, e, k );
+    //gmp_printf("O inverso é : %Zd\n",d);
+   
+    
     
 
     
@@ -162,7 +240,7 @@ int main(){
             scanf(" %s %s %s", p_string, q_string, e_string);
 
             chavePublica(p_string, q_string,e_string);
-            break;
+            break;           
         case 2:
             unsigned char mensagem[255];
             printf("Digite a mensagem a ser encriptada:\n");
