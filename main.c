@@ -3,8 +3,26 @@
 #include <gmp.h>
 #include <string.h>
 
+char letra_correspondente(mpz_t index){
+    char caracteres[95] = {
+        ' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
+        '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+        'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_',
+        '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+        'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~'
+    };
 
-void inverso_modular(mpz_t d, mpz_t e, mpz_t k){
+    long int intIndex = mpz_get_si(index);
+
+    //gmp_printf("%c", caracteres[intIndex - 32]);
+    return caracteres[intIndex - 32];
+    
+
+}
+
+
+void inverso_modular(mpz_t d, mpz_t e_temp, mpz_t k_temp){
     
     //Declarando os vetores necessários
     mpz_t resto[1000],  quociente[1000] , m[1000], n[1000], aux, mod_k;
@@ -14,13 +32,13 @@ void inverso_modular(mpz_t d, mpz_t e, mpz_t k){
     mpz_inits(quociente[0], quociente[1], NULL);
 
     //Atribuindo os valores conhecidos para o funcionamento da solução 
-    mpz_set(resto[0], e); mpz_set(resto[1], k);
+    mpz_set(resto[0], e_temp); mpz_set(resto[1], k_temp);
     mpz_set_ui(m[0], 1); mpz_set_ui(m[1], 0);
     mpz_set_ui(n[0], 0); mpz_set_ui(n[1], 1);
-    mpz_set(mod_k, k);
+    mpz_set(mod_k, k_temp);
 
     //Calcular a mod b
-    mpz_mod(aux, e, k);
+    mpz_mod(aux, e_temp, k_temp);
 
     int tam = 0;
     while (mpz_cmp_ui(aux, 0) != 0)
@@ -47,12 +65,12 @@ void inverso_modular(mpz_t d, mpz_t e, mpz_t k){
         mpz_sub(m[tam+2], m[tam], produto_mq );
         mpz_sub(n[tam+2], n[tam], produto_nq );
 
-        mpz_set(e, k);
-        mpz_set(k, resto[tam+2]);
+        mpz_set(e_temp, k_temp);
+        mpz_set(k_temp, resto[tam+2]);
     
 
         //Calcular a mod b
-        mpz_mod(aux, e, k);
+        mpz_mod(aux, e_temp, k_temp);
     
         tam++;
     }
@@ -65,7 +83,7 @@ void inverso_modular(mpz_t d, mpz_t e, mpz_t k){
 
 
 
-    mpz_set(d, m[tam+1]);;
+    mpz_set(d, m[tam+1]);
     
     
     return;
@@ -201,26 +219,66 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
     printf("%s %s %s\n%s", p_string, q_string,e_string, msg_encriptada );
 
     //Declarando e inicializando as variáveis arbitrariamente grandes 
-    mpz_t p, q, e, d, k, p_menos_1, q_menos_1;
-    mpz_inits(p, q, e, d, k, p_menos_1, q_menos_1, NULL);
+    mpz_t p, q, e, d, k, p_menos_1, q_menos_1, n;
+    mpz_inits(p, q, e, d, k, p_menos_1, q_menos_1, n, NULL);
 
     //Convertendo as string para variáveis arbitrariamente grandes 
     mpz_init_set_str(p, p_string, 10);
     mpz_init_set_str(q, q_string, 10);      
     mpz_init_set_str(e, e_string, 10);
 
+    mpz_mul(n, p, q);
+
     //Definindo (p-1)*(q-1) 
     mpz_sub_ui(p_menos_1, p, 1);
-    mpz_sub_ui(q_menos_1, p, 1);
+    mpz_sub_ui(q_menos_1, q, 1);
     mpz_mul(k, p_menos_1, q_menos_1);
 
     //Encontrar o inverso modular entre [e] e [k] onde k = (p-1)*(q-1)
     inverso_modular(d, e, k );
-    //gmp_printf("O inverso é : %Zd\n",d);
-   
-    
-    
+    gmp_printf("O inverso é : %Zd\n",d);
 
+    //Converter a string msg_encriptada em um array mpz 
+    mpz_t valores_encriptado[255], valor_aux;
+    mpz_init(valor_aux);
+
+    char *valor_aux_string;
+    valor_aux_string = strtok(msg_encriptada, " ");
+
+    //Divide os valores a cada espaço encontrado
+    int z = 0;
+    while (valor_aux_string != NULL)
+    {   
+        mpz_init(valores_encriptado[z]);
+        mpz_init_set_str(valor_aux, valor_aux_string, 10);
+        mpz_set(valores_encriptado[z], valor_aux);
+
+        valor_aux_string = strtok(NULL, " ");
+        
+        z++;
+    }
+    
+    mpz_t msg_desencriptada[255]; char txt_descodificado[255] ;
+    
+    
+    
+    for (int in = 0; in < z - 1 ; in++)
+    {
+        mpz_init(msg_desencriptada[in]);
+        
+        /*#####################################################################################
+            USAR EXPONENCIAÇÃO MODULAR RAPIDA (ADD FUNCAO DPS) => (base^exponent) % modulus
+        ######################################################################################*/
+        mpz_powm(msg_desencriptada[in], valores_encriptado[in], d, n);
+
+        txt_descodificado[in] = letra_correspondente(msg_desencriptada[in]);   
+    }
+    
+    //Cria um txt com os dados 
+    FILE *file_descodificado;
+    file_descodificado = fopen("mensagem-desencriptada.txt", "w");
+    fprintf(file_descodificado, "%s", txt_descodificado);
+    fclose(file_descodificado);
     
     return;
 }
