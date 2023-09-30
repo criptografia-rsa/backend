@@ -13,8 +13,13 @@ char letra_correspondente(mpz_t index){
         'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~'
     };
 
+    
     long int intIndex = mpz_get_si(index);
 
+    if(intIndex -32 > 94 || intIndex < 0 ){
+        printf("Valor recebido: %ld", intIndex -32);
+        return '*';
+    } 
     //gmp_printf("%c", caracteres[intIndex - 32]);
     return caracteres[intIndex - 32];
     
@@ -215,8 +220,10 @@ void encriptar(char mensagem[255], char n_string[255], char  e_string[255]){
     return;
 }
 
-void desencriptar(char p_string[255],char q_string[255], char e_string[255], char msg_encriptada[255]){
-    printf("%s %s %s\n%s", p_string, q_string,e_string, msg_encriptada );
+void desencriptar(char p_string[255],char q_string[255], char e_string[255], char *msg_encriptada){
+    printf("Entrou em desencriptar()\n");
+    //printf("O valor digitado foi: %s\n\n:", msg_encriptada);
+    //printf("%s %s %s\n%s", p_string, q_string,e_string, msg_encriptada );
 
     //Declarando e inicializando as variáveis arbitrariamente grandes 
     mpz_t p, q, e, d, k, p_menos_1, q_menos_1, n;
@@ -227,6 +234,7 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
     mpz_init_set_str(q, q_string, 10);      
     mpz_init_set_str(e, e_string, 10);
 
+    //Calculando n 
     mpz_mul(n, p, q);
 
     //Definindo (p-1)*(q-1) 
@@ -236,11 +244,11 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
 
     //Encontrar o inverso modular entre [e] e [k] onde k = (p-1)*(q-1)
     inverso_modular(d, e, k );
-    gmp_printf("O inverso é : %Zd\n",d);
+    gmp_printf("#######O inverso é : %Zd\n",d);
 
     //Converter a string msg_encriptada em um array mpz 
-    mpz_t valores_encriptado[255], valor_aux;
-    mpz_init(valor_aux);
+    mpz_t valores_encriptado[255];
+    
 
     char *valor_aux_string;
     valor_aux_string = strtok(msg_encriptada, " ");
@@ -250,28 +258,28 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
     while (valor_aux_string != NULL)
     {   
         mpz_init(valores_encriptado[z]);
-        mpz_init_set_str(valor_aux, valor_aux_string, 10);
-        mpz_set(valores_encriptado[z], valor_aux);
-
+        mpz_init_set_str(valores_encriptado[z], valor_aux_string, 10);
+        //gmp_printf("%Zd\n", valores_encriptado[z]);
         valor_aux_string = strtok(NULL, " ");
-        
         z++;
     }
     
-    mpz_t msg_desencriptada[255]; char txt_descodificado[255] ;
+   
+    mpz_t msg_desencriptada[255]; char txt_descodificado[255];
     
     
     
-    for (int in = 0; in < z - 1 ; in++)
-    {
+    for (int in = 0; in < z  ; in++)
+    {   
         mpz_init(msg_desencriptada[in]);
         
         /*#####################################################################################
             USAR EXPONENCIAÇÃO MODULAR RAPIDA (ADD FUNCAO DPS) => (base^exponent) % modulus
         ######################################################################################*/
         mpz_powm(msg_desencriptada[in], valores_encriptado[in], d, n);
-
-        txt_descodificado[in] = letra_correspondente(msg_desencriptada[in]);   
+        //gmp_printf("Numero passado: %Zd\n", msg_desencriptada[in]);
+        txt_descodificado[in] = letra_correspondente(msg_desencriptada[in]);  
+        printf("%d: %c\n", in, letra_correspondente(msg_desencriptada[in])); 
     }
     
     //Cria um txt com os dados 
@@ -318,12 +326,18 @@ int main(){
             scanf(" %s %s %s", p_s, q_s, e_s);
             getchar();
 
-            unsigned char msg_encriptada[255];
+            //Memoria alocada dinamicamente
+            char *msg_encriptada = NULL;
+            size_t buffer_size = 4096; 
+            msg_encriptada = (char *)malloc(buffer_size);
+
             printf("Digite a mensagem encriptada:\n");
-            fgets(msg_encriptada, sizeof(msg_encriptada), stdin);
-
+            //getchar();
+            fgets(msg_encriptada, buffer_size, stdin);
+            
+           
             desencriptar(p_s, q_s, e_s, msg_encriptada);
-
+            
             break;
         }
 
