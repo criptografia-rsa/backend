@@ -5,6 +5,7 @@
 
 void fastExpoMod(mpz_t base, mpz_t expoente, mpz_t n, mpz_t lastRest ){
 
+        
         mpz_t binary_inverse[1000], binary[1000], resto[1000];
     
 
@@ -72,7 +73,7 @@ char letra_correspondente(mpz_t index){
     long int intIndex = mpz_get_si(index);
 
     if(intIndex -32 > 94 || intIndex < 0 ){
-        printf("Valor recebido: %ld", intIndex -32);
+        //printf("Valor recebido: %ld", intIndex -32);
         return '*';
     } 
     //gmp_printf("%c", caracteres[intIndex - 32]);
@@ -167,7 +168,7 @@ int escolhaInicial(){
     return escolha;
 }
 
-void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
+char *chavePublica(char p_string[100],char q_string[100], char e_string[100]){
 
     //Declarando as variáveis mpz
     mpz_t p,q,e,n;
@@ -190,6 +191,12 @@ void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
     str_n =  mpz_get_str(NULL, 10, n);
     str_e =  mpz_get_str(NULL, 10, e);
 
+    //Concatenando as strings 
+    int tam_string = strlen(str_n) + strlen(str_e) + 2;
+    char *response = (char *)malloc(tam_string * sizeof(char));
+
+    snprintf(response, tam_string, "%s\n%s", str_n, str_e);
+
     //Cria um txt com os dados 
     FILE *file;
     file = fopen("chave-publica.txt", "w");
@@ -200,7 +207,7 @@ void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
     mpz_clears(p, q, e,n, NULL);
     free(str_p); free(str_q); free(str_e); free(str_n);
 
-    return;
+    return response;
 }
 
 
@@ -230,7 +237,7 @@ int preCodificar(char letra){
     //return -1;
 }
 
-void encriptar( char *mensagem, unsigned char n_string[255], unsigned char  e_string[255]){
+char *encriptar( char *mensagem, unsigned char n_string[255], unsigned char  e_string[255]){
         //Declarando e Inicializando variáveis arbitrariamentre grandes 
         mpz_t n, e, base;
         mpz_inits(n, e, base, NULL);
@@ -267,19 +274,29 @@ void encriptar( char *mensagem, unsigned char n_string[255], unsigned char  e_st
         FILE *file;
         file = fopen("mensagem-encriptada.txt", "w");
 
+        char *response_encriptado = NULL;
+        size_t buffer_size_r = 4096; 
+        response_encriptado = (char *)malloc(buffer_size_r);
+
+
         for (int k = 0; k < tam_max -1; k++)
         {   
             gmp_fprintf(file, "%Zd ",array_codificado[k]);
+
+            char *str = mpz_get_str(NULL, 10, array_codificado[k]);
+            strcat(response_encriptado, str); // Concatena a string
+            strcat(response_encriptado, "\n"); // Adiciona uma quebra de linha
+
+            free(str); // Libera a memória alocada por mpz_get_str
         }
 
         fclose(file);
 
-    
-    return;
+    return response_encriptado;
 }
 
-void desencriptar(char p_string[255],char q_string[255], char e_string[255], char *msg_encriptada){
-    printf("Entrou em desencriptar()\n");
+char *desencriptar(char p_string[255],char q_string[255], char e_string[255], char *msg_encriptada){
+    //printf("Entrou em desencriptar()\n");
     //printf("O valor digitado foi: %s\n\n:", msg_encriptada);
     //printf("%s %s %s\n%s", p_string, q_string,e_string, msg_encriptada );
 
@@ -302,7 +319,7 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
 
     //Encontrar o inverso modular entre [e] e [k] onde k = (p-1)*(q-1)
     inverso_modular(d, e, k );
-    gmp_printf("#######O inverso é : %Zd\n",d);
+    //gmp_printf("#######O inverso é : %Zd\n",d);
 
     //Converter a string msg_encriptada em um array mpz 
     mpz_t valores_encriptado[255];
@@ -323,7 +340,10 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
     }
     
    
-    mpz_t msg_desencriptada[255]; char txt_descodificado[255];
+    mpz_t msg_desencriptada[255]; char *txt_descodificado = NULL;
+
+    size_t buffer_size_0 = 4096; 
+    txt_descodificado = (char *)malloc(buffer_size_0);
     
     
     
@@ -331,14 +351,12 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
     {   
         mpz_init(msg_desencriptada[in]);
         
-        /*#####################################################################################
-            USAR EXPONENCIAÇÃO MODULAR RAPIDA (ADD FUNCAO DPS) => (base^exponent) % modulus
-        ######################################################################################*/
-        //fastExpoMod(valores_encriptado[in], d, n,msg_desencriptada[in]);
+        //fastExpoMod(valores_encriptado[in], d, n, msg_desencriptada[in]);
         mpz_powm(msg_desencriptada[in], valores_encriptado[in], d, n);
+
         //gmp_printf("Numero passado: %Zd\n", msg_desencriptada[in]);
         txt_descodificado[in] = letra_correspondente(msg_desencriptada[in]);  
-        printf("%d: %c\n", in, letra_correspondente(msg_desencriptada[in])); 
+        //printf("%d: %c\n", in, letra_correspondente(msg_desencriptada[in])); 
     }
     
     //Cria um txt com os dados 
@@ -347,7 +365,7 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
     fprintf(file_descodificado, "%s", txt_descodificado);
     fclose(file_descodificado);
     
-    return;
+    return txt_descodificado;
 }
 
 
@@ -364,7 +382,11 @@ int main(){
             printf("Digite os valores de p q e:\n");
             scanf(" %s %s %s", p_string, q_string, e_string);
 
-            chavePublica(p_string, q_string,e_string);
+            char *chaves = NULL;
+            chaves = chavePublica(p_string, q_string,e_string);
+
+
+            free(chaves);
             break;           
         case 2:
             //Declaro a mensagem inicial e o tamaho de memoria razoável
@@ -381,7 +403,10 @@ int main(){
             scanf(" %s %s", n_str, e_str);
             getchar();
             
-            encriptar(mensagem, n_str, e_str);
+            char *response_test = NULL;
+            response_test = (char *)malloc(buffer_size_0);
+            response_test = encriptar(mensagem, n_str, e_str);
+            //printf("###Recebido###::\n%s", response_test);
             free(mensagem);
             break;
         case 3:
@@ -401,7 +426,10 @@ int main(){
             fgets(msg_encriptada, buffer_size, stdin);
             
            
-            desencriptar(p_s, q_s, e_s, msg_encriptada);
+            char *response_descriptado = desencriptar(p_s, q_s, e_s, msg_encriptada);
+            //printf("Response:\n%s\n", response_descriptado);
+
+
             free(msg_encriptada);
             break;
         }
