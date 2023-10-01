@@ -3,6 +3,61 @@
 #include <gmp.h>
 #include <string.h>
 
+void fastExpoMod(mpz_t base, mpz_t expoente, mpz_t n, mpz_t lastRest ){
+
+        mpz_t binary_inverse[1000], binary[1000], resto[1000];
+    
+
+
+        int i = 0;
+        
+        while (mpz_cmp_ui(expoente, 0) > 0)
+        {   
+            mpz_t expo_mod_2; 
+            mpz_inits(expo_mod_2, binary_inverse[i], NULL);
+
+            //Calcula expoente % 2
+            mpz_mod_ui(expo_mod_2, expoente, 2);
+
+            //Atribuição
+            mpz_set(binary_inverse[i], expo_mod_2);
+
+            //Calcula expoente/2
+            mpz_div_ui(expoente, expoente, 2);
+            
+            i++;
+
+        }
+
+        mpz_set(resto[0], base);
+        
+        for (int k = 1; k < i; k++)
+        {   
+            mpz_init(binary[k]);
+            mpz_set(binary[k], binary_inverse[i - k - 1]);
+            
+            //Calculando resto[k] = resto[k - 1]² mod n
+            mpz_mul(resto[k], resto[k - 1], resto[k - 1]);
+            mpz_mod(resto[k], resto[k], n);
+
+
+            if(mpz_cmp_ui(binary[k], 1) == 0){
+
+                //resto[k] = (resto[k]*base) % n;
+                mpz_mul(resto[k], resto[k], base);
+                mpz_mod(resto[k], resto[k], n);
+                
+            }
+            //gmp_printf("R: %Zd", resto[k]);
+        }
+        
+        
+        mpz_set(lastRest, resto[i-1]);
+
+
+        return;
+    }
+
 char letra_correspondente(mpz_t index){
     char caracteres[95] = {
         ' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
@@ -30,7 +85,7 @@ char letra_correspondente(mpz_t index){
 void inverso_modular(mpz_t d, mpz_t e_temp, mpz_t k_temp){
     
     //Declarando os vetores necessários
-    mpz_t resto[1000],  quociente[1000] , m[1000], n[1000], aux, mod_k;
+    mpz_t resto[100000],  quociente[100000] , m[100000], n[100000], aux, mod_k;
 
     //Inicialização dos dois primeiros elementos de resto[], m[] e n[]
     mpz_inits(resto[0], resto[1],  m[0], m[1],   n[0], n[1], aux, mod_k, NULL);
@@ -150,6 +205,7 @@ void chavePublica(char p_string[100],char q_string[100], char e_string[100]){
 
 
 int preCodificar(char letra){
+    //printf("Entrou no PreCodificar! ");
     //Declarando nossa referência da ACSII | Intervalo : 32-126
     char caracteres[95] = {
         ' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
@@ -163,17 +219,18 @@ int preCodificar(char letra){
     for (int i = 0; i < 95; i++)
     {
         if(letra == caracteres[i]){
-            //printf("Entrou no letra  == caracter[]i\n");
+            //printf("Entrou no letra  == caracter[%d] %c\n", i, caracteres[i]);
             return i + 32;
         } 
     }
    
+    return '*';
     //RESOLVER PROBLEMA PQ TA PASSANDO O FOR NO ULTIMO CARACTER QUE NAO DEVERIA EXISTIR
     //printf("Caracter %c é inválido!\n", letra);
     //return -1;
 }
 
-void encriptar(char mensagem[255], char n_string[255], char  e_string[255]){
+void encriptar( char *mensagem, unsigned char n_string[255], unsigned char  e_string[255]){
         //Declarando e Inicializando variáveis arbitrariamentre grandes 
         mpz_t n, e, base;
         mpz_inits(n, e, base, NULL);
@@ -183,33 +240,34 @@ void encriptar(char mensagem[255], char n_string[255], char  e_string[255]){
         mpz_init_set_str(e, e_string, 10);
         
         //Pré-Codificar
-        int i = 0, array_pre_codificado[255];
-        while (mensagem[i] != '\0')
-        {   
+        int *array_pre_codificado = NULL;
+        size_t buffer_size_1 = 4096; 
+        array_pre_codificado = (int *)malloc(buffer_size_1);
+
+        //Tamanho da String Mensagem
+        int tam_max = strlen(mensagem);
+
+        //Armazena as variaveis com valores codificados
+        mpz_t array_codificado[tam_max];
+
+        for (int i = 0; i < tam_max - 1; i++)
+        {
             array_pre_codificado[i] = preCodificar(mensagem[i]);
-            i++;
-        }
-        
-        //Codificar 
-        mpz_t array_codificado[i];
+            //printf("PreCodificadoArray[%d]: %c \n", i, array_pre_codificado[i]);
 
-
-        for (int k = 0; k < i - 1; k++)
-        {   mpz_init(array_codificado[k]);
-            mpz_set_ui(base, array_pre_codificado[k]);
+            mpz_init(array_codificado[i]);
+            mpz_set_ui(base, array_pre_codificado[i]);
 
             // Calcula (base^exponent) % modulus
-            mpz_powm(array_codificado[k], base, e, n);
+            //fastExpoMod(base,e,n,array_codificado[i]);
+            mpz_powm(array_codificado[i], base, e, n);
         }
-        
-
-        
         
         //Cria um txt com os dados 
         FILE *file;
         file = fopen("mensagem-encriptada.txt", "w");
 
-        for (int k = 0; k < i -1; k++)
+        for (int k = 0; k < tam_max -1; k++)
         {   
             gmp_fprintf(file, "%Zd ",array_codificado[k]);
         }
@@ -276,6 +334,7 @@ void desencriptar(char p_string[255],char q_string[255], char e_string[255], cha
         /*#####################################################################################
             USAR EXPONENCIAÇÃO MODULAR RAPIDA (ADD FUNCAO DPS) => (base^exponent) % modulus
         ######################################################################################*/
+        //fastExpoMod(valores_encriptado[in], d, n,msg_desencriptada[in]);
         mpz_powm(msg_desencriptada[in], valores_encriptado[in], d, n);
         //gmp_printf("Numero passado: %Zd\n", msg_desencriptada[in]);
         txt_descodificado[in] = letra_correspondente(msg_desencriptada[in]);  
@@ -308,16 +367,22 @@ int main(){
             chavePublica(p_string, q_string,e_string);
             break;           
         case 2:
-            unsigned char mensagem[255];
+            //Declaro a mensagem inicial e o tamaho de memoria razoável
+            char *mensagem = NULL;
+            size_t buffer_size_0 = 4096; 
+            mensagem = (char *)malloc(buffer_size_0);
+
             printf("Digite a mensagem a ser encriptada:\n");
-            fgets(mensagem, sizeof(mensagem), stdin);
+            fgets(mensagem, buffer_size_0, stdin);
+            
 
             unsigned char n_str[255], e_str[255];
             printf("Digite o valor a chave publica (n,e)\n");
             scanf(" %s %s", n_str, e_str);
+            getchar();
             
             encriptar(mensagem, n_str, e_str);
-
+            free(mensagem);
             break;
         case 3:
             //Lendo os valores de p q e 
@@ -337,7 +402,7 @@ int main(){
             
            
             desencriptar(p_s, q_s, e_s, msg_encriptada);
-            
+            free(msg_encriptada);
             break;
         }
 
