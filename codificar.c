@@ -52,7 +52,7 @@ int main(){
     int p = 5, q = 7, e = 7;
     int n = p*q; 
     
-    //Declaro o array que quarda os valores codificados 
+    //Declaro o array que guarda os valores codificados 
     unsigned long long codificado[255];
     
     printf("\n\n ##Codificado\n");
